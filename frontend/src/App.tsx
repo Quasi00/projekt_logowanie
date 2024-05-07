@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import logo from './logo.svg';
+//import logo from './logo.svg';
 import './App.css';
 
 function App() {
@@ -35,42 +35,49 @@ function App() {
   };
 
   return (
-    <div>
-      <h2>Login Form</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Login:</label>
-          <input
-            type="text"
-            value={login}
-            onChange={(e) => setLogin(e.target.value)}
-          />
-        </div>
-        <div>
-          <label>Password:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <div>
-          <label>Image:</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files && e.target.files[0];
-              if (file) {
-                setImage(file);
-              }
-            }}
-          />
-        </div>
-        <button type="submit">Submit</button>
-      </form>
-      {message && <p>{message}</p>}
-    </div>
+    <>
+      <div className="background">
+          <div className="shape"></div>
+          <div className="shape"></div>
+      </div>
+      
+      <div>
+        <form onSubmit={handleSubmit}>
+        <h2>Login Form</h2>
+          <div>
+            <label>Login:</label>
+            <input
+              type="text"
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
+            />
+          </div>
+          <div>
+            <label>Password:</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <div>
+            <label>Image:</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files && e.target.files[0];
+                if (file) {
+                  setImage(file);
+                }
+              }}
+            />
+          </div>
+          <button type="submit">Submit</button>
+        </form>
+        {message && <p>{message}</p>}
+      </div>
+    </>
   );
 }
 
