@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-//import logo from './logo.svg';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
 function App() {
@@ -7,6 +6,20 @@ function App() {
   const [password, setPassword] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [message, setMessage] = useState('');
+  const messageRef = useRef<HTMLParagraphElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event:any) => {
+      if (messageRef.current && !messageRef.current.contains(event.target)) {
+        setMessage('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +88,7 @@ function App() {
           </div>
           <button type="submit">Submit</button>
         </form>
-        {message && <p>{message}</p>}
+        {message && <p ref={messageRef}>{message}</p>}
       </div>
     </>
   );
