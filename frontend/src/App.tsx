@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import './App.css';
 import Webcam from 'react-webcam';
 
@@ -7,6 +7,20 @@ function App() {
   const [password, setPassword] = useState('zaq12wsx');
   const [image, setImage] = useState('');
   const [message, setMessage] = useState('');
+  const messageRef = useRef<HTMLParagraphElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event:any) => {
+      if (messageRef.current && !messageRef.current.contains(event.target)) {
+        setMessage('');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
