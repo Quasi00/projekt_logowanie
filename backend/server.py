@@ -5,9 +5,9 @@ import face_recognition
 app = Flask(__name__)
 CORS(app)
 
-def compare(img):
+def compare(img, img2):
     image_path_1 = 'images/'+img
-    image_path_2 = 'images/p2.png'
+    image_path_2 = img2
 
     # Wczytaj obrazy
     image_1 = face_recognition.load_image_file(image_path_1)
@@ -76,7 +76,7 @@ def get_account():
     account = next((item for item in accounts if item["login"] == login and item["password"] == password), None)
 
     if account:
-        return jsonify(image)
+        return jsonify(account, compare(account["image"], image))
     else:
         return jsonify({"message": "Account not found"}), 404
 

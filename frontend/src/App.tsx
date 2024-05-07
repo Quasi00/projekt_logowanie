@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
 function App() {
-  const [login, setLogin] = useState('');
-  const [password, setPassword] = useState('');
+  const [login, setLogin] = useState('jakubkurzacz123');
+  const [password, setPassword] = useState('zaq12wsx');
   const [image, setImage] = useState<File | null>(null);
   const [message, setMessage] = useState('');
   const messageRef = useRef<HTMLParagraphElement | null>(null);
