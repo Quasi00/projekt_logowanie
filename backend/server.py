@@ -1,13 +1,28 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import face_recognition
+import base64
+from PIL import Image
+from io import BytesIO
 
 app = Flask(__name__)
 CORS(app)
 
+def convert_base64_to_image(base64_string):
+    # Usuń nagłówek i rozdzielczosc (np. data:image/jpeg;base64,) z kodu base64
+    base64_string = base64_string.split(',')[1]
+
+    # Dekoduj kod base64 do surowych danych bajtowych
+    image_data = base64.b64decode(base64_string)
+
+    # Utwórz obiekt obrazu z surowych danych bajtowych
+    image = BytesIO(image_data)
+
+    return image
+
 def compare(img, img2):
     image_path_1 = 'images/'+img
-    image_path_2 = img2
+    image_path_2 = convert_base64_to_image(img2)
 
     # Wczytaj obrazy
     image_1 = face_recognition.load_image_file(image_path_1)
@@ -43,7 +58,7 @@ accounts = [
 # Ustawienie nagłówków CORS
 @app.after_request
 def set_cors_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'  # Wpisz swoje pochodzenie (origin)
+    response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
     return response
@@ -53,24 +68,15 @@ def set_cors_headers(response):
 def get_products():
     return jsonify(accounts)
 
-# Endpoint do pobierania danych o produkcie na podstawie ID
-@app.route('/api/products/<string:varlogin>/<string:varpassword>', methods=['GET'])
-def get_product(varlogin, varpassword):
-    account = next((item for item in accounts if item["login"] == varlogin and item["password"] == varpassword), None)
-    if account:
-        return jsonify(account, compare(account["image"]))
-    else:
-        return jsonify({"message": "Account not found"}), 404
-
 # Endpoint do dodawania nowego produktu
 @app.route('/api/account', methods=['POST'])
 def get_account():
-    data = request.form
-    login = data.get('login')
-    password = data.get('password')
-    image = request.files.get('image')
+    data = request.json  # Odczytaj dane wysłane w formacie JSON
+    login = data['login']
+    password = data['password']
+    image = data['image']
 
-    if not login or not password or not image:
+    if not login or not password and not image:
         return jsonify({"message": "Brakuje danych"}), 400
 
     account = next((item for item in accounts if item["login"] == login and item["password"] == password), None)

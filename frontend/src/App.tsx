@@ -1,26 +1,28 @@
-import React, { useState } from 'react';
-//import logo from './logo.svg';
+import React, { useCallback, useRef, useState } from 'react';
 import './App.css';
+import Webcam from 'react-webcam';
 
 function App() {
   const [login, setLogin] = useState('jakubkurzacz123');
   const [password, setPassword] = useState('zaq12wsx');
-  const [image, setImage] = useState<File | null>(null);
+  const [image, setImage] = useState('');
   const [message, setMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append('login', login);
-    formData.append('password', password);
-    if (image) {
-      formData.append('image', image);
+    const data = {
+      login: login,
+      password: password,
+      image: image
     }
+
+    console.log(data)
 
     const response = await fetch('http://127.0.0.1:5000//api/account', {
       method: 'POST',
-      body: formData,
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data),
     });
 
     if (response.ok) {
@@ -34,6 +36,23 @@ function App() {
     }
   };
 
+  const videoConstraints = {
+    width: 1280,
+    height: 720,
+    facingMode: "user"
+  };
+
+  const [isCaptureEnable, setCaptureEnable] = useState<boolean>(false);
+  const webcamRef = useRef<Webcam>(null);
+  const [url, setUrl] = useState<string | null>(null);
+  const capture = useCallback(() => {
+    const imageSrc = webcamRef.current?.getScreenshot();
+    if (imageSrc) {
+      setUrl(imageSrc);
+      setImage(imageSrc);
+    }
+  }, [webcamRef]);
+
   return (
     <>
       <div className="background">
@@ -41,8 +60,8 @@ function App() {
           <div className="shape"></div>
       </div>
       
-      <div>
-        <form onSubmit={handleSubmit}>
+      <div className='form'>
+        <div>
         <h2>Login Form</h2>
           <div>
             <label>Login:</label>
@@ -61,20 +80,46 @@ function App() {
             />
           </div>
           <div>
-            <label>Image:</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files && e.target.files[0];
-                if (file) {
-                  setImage(file);
-                }
-              }}
-            />
+          {isCaptureEnable || (
+            <button onClick={() => setCaptureEnable(true)}>start</button>
+          )}
+          {isCaptureEnable && (
+            <>
+              <div>
+                <button onClick={() => setCaptureEnable(false)}>end </button>
+              </div>
+              <div>
+                <Webcam
+                  audio={false}
+                  width={540}
+                  height={360}
+                  ref={webcamRef}
+                  screenshotFormat="image/jpeg"
+                  videoConstraints={videoConstraints}
+                />
+              </div>
+              <button onClick={capture} type='button'>capture</button>
+            </>
+          )}
+          {url && (
+            <>
+              <div>
+                <button
+                  onClick={() => {
+                    setUrl(null);
+                  }}
+                >
+                  delete
+                </button>
+              </div>
+              <div>
+                <img src={url} alt="Screenshot" />
+              </div>
+            </>
+          )}
           </div>
-          <button type="submit">Submit</button>
-        </form>
+          <button onClick={handleSubmit}>Submit</button>
+        </div>
         {message && <p>{message}</p>}
       </div>
     </>
