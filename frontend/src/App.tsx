@@ -1,11 +1,13 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import './App.css';
 import Webcam from 'react-webcam';
+import { log } from 'console';
 
 function App() {
+  const [logged, setLogged] = useState<{name: string} | null>(null);
   const [login, setLogin] = useState('jakubkurzacz123');
   const [password, setPassword] = useState('zaq12wsx');
-  const [image, setImage] = useState('');
+  const webcamRef = useRef<Webcam>(null);
   const [message, setMessage] = useState('');
   const messageRef = useRef<HTMLParagraphElement | null>(null);
 
@@ -28,10 +30,8 @@ function App() {
     const data = {
       login: login,
       password: password,
-      image: image
+      image: webcamRef.current?.getScreenshot()
     }
-
-    console.log(data)
 
     const response = await fetch('http://127.0.0.1:5000//api/account', {
       method: 'POST',
@@ -42,11 +42,11 @@ function App() {
     if (response.ok) {
       const data = await response.json();
       console.log('Account details:', data);
-      setMessage('');
+      setLogged(data);
     } else {
       const errorMessage = await response.json();
-      console.error('Error:', errorMessage.message);
-      setMessage(errorMessage.message);
+      console.error('Error:', errorMessage.error);
+      setMessage(errorMessage.error);
     }
   };
 
@@ -55,18 +55,7 @@ function App() {
     height: 720,
     facingMode: "user"
   };
-
-  const [isCaptureEnable, setCaptureEnable] = useState<boolean>(false);
-  const webcamRef = useRef<Webcam>(null);
-  const [url, setUrl] = useState<string | null>(null);
-  const capture = useCallback(() => {
-    const imageSrc = webcamRef.current?.getScreenshot();
-    if (imageSrc) {
-      setUrl(imageSrc);
-      setImage(imageSrc);
-    }
-  }, [webcamRef]);
-
+  
   return (
     <>
       <div className="background">
@@ -75,66 +64,48 @@ function App() {
       </div>
       
       <div className='form'>
-        <div>
-        <h2>Login Form</h2>
-          <div>
-            <label>Login:</label>
-            <input
-              type="text"
-              value={login}
-              onChange={(e) => setLogin(e.target.value)}
-            />
-          </div>
-          <div>
-            <label>Password:</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <div>
-          {isCaptureEnable || (
-            <button onClick={() => setCaptureEnable(true)}>start</button>
-          )}
-          {isCaptureEnable && (
-            <>
+        {logged?
+          <>
+            <h1>Logged In:</h1>
+            <div>
+              Hello {logged.name}
+              <button onClick={() => {setLogged(null)}}>Logout</button>
+            </div>
+          </>
+          :
+          <>
+            <h2>Login Form</h2>
+            <div>
               <div>
-                <button onClick={() => setCaptureEnable(false)}>end </button>
+                <label>Login:</label>
+                <input
+                  type="text"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                />
               </div>
               <div>
+                <label>Password:</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div className='cam'>
                 <Webcam
                   audio={false}
-                  width={540}
-                  height={360}
+                  width={250}
                   ref={webcamRef}
                   screenshotFormat="image/jpeg"
                   videoConstraints={videoConstraints}
                 />
               </div>
-              <button onClick={capture} type='button'>capture</button>
-            </>
-          )}
-          {url && (
-            <>
-              <div>
-                <button
-                  onClick={() => {
-                    setUrl(null);
-                  }}
-                >
-                  delete
-                </button>
-              </div>
-              <div>
-                <img src={url} alt="Screenshot" />
-              </div>
-            </>
-          )}
-          </div>
-          <button onClick={handleSubmit}>Submit</button>
-        </div>
-        {message && <p>{message}</p>}
+              <button onClick={handleSubmit}>Submit</button>
+            </div>
+          </>
+        }
+        {message && <p ref={messageRef}>{message}</p>}
       </div>
     </>
   );

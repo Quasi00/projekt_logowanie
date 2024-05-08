@@ -22,7 +22,10 @@ def convert_base64_to_image(base64_string):
 
 def compare(img, img2):
     image_path_1 = 'images/'+img
-    image_path_2 = convert_base64_to_image(img2)
+    try:
+        image_path_2 = convert_base64_to_image(img2)
+    except:
+        return -1
 
     # Wczytaj obrazy
     image_1 = face_recognition.load_image_file(image_path_1)
@@ -34,7 +37,7 @@ def compare(img, img2):
 
     # Jeśli znaleziono więcej niż jedną twarz na którymś z obrazów, użyj pierwszej znalezionej
     if len(face_locations_1) == 0 or len(face_locations_2) == 0:
-        return "Nie znaleziono twarzy na jednym z obrazów."
+        return -2
 
     # kodowanie twarzy z obrazów
     face_encoding_1 = face_recognition.face_encodings(image_1, known_face_locations=[face_locations_1[0]])[0]
@@ -44,9 +47,9 @@ def compare(img, img2):
     results = face_recognition.compare_faces([face_encoding_1], face_encoding_2)
 
     if results[0]:
-        return "Twarze są identyczne."
+        return 2
     else:
-        return "Twarze nie są identyczne."
+        return -2
 
 # Przykładowa lista danych
 accounts = [
@@ -77,14 +80,20 @@ def get_account():
     image = data['image']
 
     if not login or not password and not image:
-        return jsonify({"message": "Brakuje danych"}), 400
+        return jsonify({"error": "Brakuje danych"}), 400
 
     account = next((item for item in accounts if item["login"] == login and item["password"] == password), None)
 
     if account:
-        return jsonify(account, compare(account["image"], image))
+        comp = compare(account["image"], image)
+        if (comp == -1):
+            return jsonify({'error':'Brak dostępu do kamery'}), 400
+        elif (comp == -2):
+            return jsonify({"error": "Twarz się nie zgadza"}), 400
+        else:
+            return jsonify({"name": account["login"]}), 200
     else:
-        return jsonify({"message": "Account not found"}), 404
+        return jsonify({"error": "Błędne dane"}), 400
 
 if __name__ == '__main__':
     app.run(debug=True)
